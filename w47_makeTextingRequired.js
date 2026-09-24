@@ -1,11 +1,12 @@
 (function () {
   // ---------------------------------------------------------------
+  // cmm 9/24/26 
   // One rule per form. Add a line here for any future form.
   // "phone" and "texting" are the HTML ids of the fields on the page.
   // ---------------------------------------------------------------
   var RULES = [
     { name: "Account creation",   phone: "address1_telephone2",        texting: "w47_allowtexting" },
-    { name: "Application",        phone: "datatel_address1_cellphone", texting: "w47_allowtexting" } // <-- confirm texting id
+    { name: "Application",        phone: "datatel_address1_cellphone", texting: "w47_allowtexting" }
   ];
 
   var LOG = "[W47 Texting]";
@@ -25,14 +26,14 @@
     var cellphone = document.getElementById(rule.phone);
     var allowTexting = document.getElementById(rule.texting);
 
-    if (!cellphone || !allowTexting) return false;       // not on this page (yet)
-    if (allowTexting.getAttribute("data-w47-wired")) return true; // already set up
+    if (!cellphone || !allowTexting) return false;       // this page hasn't loaded yet
+    if (allowTexting.getAttribute("data-w47-wired")) return true; // page has loaded!
     allowTexting.setAttribute("data-w47-wired", "true");
 
     console.log(LOG, "Wired up:", rule.name);
     addStylesOnce();
 
-    // Asterisk on the label
+    // Create Asterisk on the label
     var label =
       document.querySelector('label[for="' + rule.texting + '"]') ||
       document.getElementById(rule.texting + "_label");
@@ -45,7 +46,7 @@
     marker.style.display = "none";
     if (label) label.appendChild(marker);
 
-    // Hint under the field
+    // Message appears under field
     var hint = document.createElement("div");
     hint.id = rule.texting + "_w47hint";
     hint.className = "w47-hint";
@@ -102,8 +103,7 @@
     console.log(LOG, "LOADED");
     if (setupAll()) return;
 
-    // Some portal forms build their fields after the page loads,
-    // so keep watching for a short while.
+    // Waiting in case the portal loads slower
     var observer = new MutationObserver(function () {
       if (setupAll()) observer.disconnect();
     });
