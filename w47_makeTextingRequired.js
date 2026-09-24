@@ -30,7 +30,7 @@
     if (allowTexting.getAttribute("data-w47-wired")) return true; // page has loaded!
     allowTexting.setAttribute("data-w47-wired", "true");
 
-    console.log(LOG, "Wired up:", rule.name);
+    //console.log(LOG, "Wired up:", rule.name);
     addStylesOnce();
 
     // Create Asterisk on the label
@@ -100,7 +100,7 @@
   }
 
   function init() {
-    console.log(LOG, "LOADED");
+    //console.log(LOG, "LOADED");
     if (setupAll()) return;
 
     // Waiting in case the portal loads slower
