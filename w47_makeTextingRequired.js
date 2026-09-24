@@ -7,7 +7,22 @@
 
     if (!cellphone || !allowTexting) return; // not on this page, bail out quietly
 
-    // Find the question's label
+    // --- Styles for the highlight (added once) ---
+    var style = document.createElement("style");
+    style.textContent =
+      ".w47-needs-answer {" +
+      "  outline: 2px dashed #c00;" +
+      "  outline-offset: 3px;" +
+      "  border-radius: 2px;" +
+      "}" +
+      ".w47-hint {" +
+      "  color: #c00;" +
+      "  font-size: 0.9em;" +
+      "  margin-top: 4px;" +
+      "}";
+    document.head.appendChild(style);
+
+    // --- Label asterisk ---
     var label =
       document.querySelector('label[for="w47_allowtexting"]') ||
       document.getElementById("w47_allowtexting_label");
@@ -16,17 +31,34 @@
       console.warn("Make Texting Required - label for w47_allowtexting not found");
     }
 
-    // Build the asterisk once, then just show/hide it
     var marker = document.createElement("span");
     marker.className = "w47-required-marker";
     marker.textContent = " *";
-    marker.setAttribute("aria-hidden", "true"); // screen readers get aria-required instead
+    marker.setAttribute("aria-hidden", "true");
     marker.style.color = "#c00";
     marker.style.display = "none";
     if (label) label.appendChild(marker);
 
-    function syncRequired() {
+    // --- Short hint under the field ---
+    var hint = document.createElement("div");
+    hint.id = "w47_allowtexting_hint";
+    hint.className = "w47-hint";
+    hint.textContent = "Since you gave us a cell number, please answer this question.";
+    hint.style.display = "none";
+    allowTexting.insertAdjacentElement("afterend", hint);
+
+    // Works whether the field is a dropdown, a single input, or a radio group
+    function isAnswered() {
+      var tag = allowTexting.tagName;
+      if (tag === "SELECT" || (tag === "INPUT" && allowTexting.type !== "radio")) {
+        return allowTexting.value !== "" && allowTexting.value !== "-1";
+      }
+      return !!allowTexting.querySelector("input:checked");
+    }
+
+    function sync() {
       var needed = cellphone.value.trim().length > 0;
+      var showWarning = needed && !isAnswered();
 
       if (needed) {
         allowTexting.setAttribute("required", "required");
@@ -37,16 +69,24 @@
       }
 
       marker.style.display = needed ? "inline" : "none";
+
+      allowTexting.classList.toggle("w47-needs-answer", showWarning);
+      hint.style.display = showWarning ? "block" : "none";
+      if (showWarning) {
+        allowTexting.setAttribute("aria-describedby", hint.id);
+      } else {
+        allowTexting.removeAttribute("aria-describedby");
+      }
     }
 
-    cellphone.addEventListener("input", syncRequired);
-    cellphone.addEventListener("change", syncRequired); // catches browser autofill
-    cellphone.addEventListener("blur", syncRequired);
+    cellphone.addEventListener("input", sync);
+    cellphone.addEventListener("change", sync); // catches browser autofill
+    cellphone.addEventListener("blur", sync);
+    allowTexting.addEventListener("change", sync); // clears the highlight once answered
 
-    syncRequired(); // handle a phone number that's already filled in on load
+    sync();
   }
 
-  // Run now if the page already finished loading, otherwise wait for it
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", init);
   } else {
